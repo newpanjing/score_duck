@@ -1,26 +1,27 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import '../data/score_store.dart';
+import '../controllers/game_controller.dart';
 import '../models/game.dart';
 import '../models/player.dart';
 
-class CreateGameScreen extends ConsumerStatefulWidget {
+class CreateGameScreen extends StatefulWidget {
   const CreateGameScreen({super.key});
 
   @override
-  ConsumerState<CreateGameScreen> createState() => _CreateGameScreenState();
+  State<CreateGameScreen> createState() => _CreateGameScreenState();
 }
 
-class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
+class _CreateGameScreenState extends State<CreateGameScreen> {
   final TextEditingController _nameController = TextEditingController();
   final List<TextEditingController> _playerControllers = [];
   double _playerCount = 3.0;
+  late final GameController _gameController;
 
   @override
   void initState() {
     super.initState();
+    _gameController = Get.find<GameController>();
     _nameController.text = 'create_game_default_game_name'.tr;
     for (int i = 0; i < 3; i++) {
       _playerControllers.add(TextEditingController(
@@ -68,7 +69,7 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
       players: players,
     );
 
-    await ref.read(scoreProvider.notifier).addGame(game);
+    await _gameController.addGame(game);
     if (mounted) {
       Navigator.of(context).pop();
       Get.toNamed('/game/${game.id}');

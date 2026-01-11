@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class ThemeNotifier extends Notifier<ThemeMode> {
+class ThemeController extends GetxController {
   static const _key = 'theme_mode';
+  static ThemeController get to => Get.find();
+
+  final Rx<ThemeMode> _currentTheme = ThemeMode.system.obs;
+  ThemeMode get currentTheme => _currentTheme.value;
 
   @override
-  ThemeMode build() {
-    Future.microtask(() => _loadTheme());
-    return ThemeMode.system;
+  void onInit() {
+    super.onInit();
+    _loadTheme();
   }
 
   Future<void> _loadTheme() async {
@@ -16,7 +20,7 @@ class ThemeNotifier extends Notifier<ThemeMode> {
       final prefs = await SharedPreferences.getInstance();
       final index = prefs.getInt(_key);
       if (index != null) {
-        state = ThemeMode.values[index];
+        _currentTheme.value = ThemeMode.values[index];
       }
     } catch (e) {
       // Fail silently or log
@@ -24,11 +28,8 @@ class ThemeNotifier extends Notifier<ThemeMode> {
   }
 
   Future<void> setTheme(ThemeMode mode) async {
-    state = mode;
+    _currentTheme.value = mode;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_key, mode.index);
   }
 }
-
-final themeProvider =
-    NotifierProvider<ThemeNotifier, ThemeMode>(ThemeNotifier.new);

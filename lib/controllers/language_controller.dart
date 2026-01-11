@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class LanguageNotifier extends Notifier<Locale?> {
+class LanguageController extends GetxController {
   static const _key = 'locale';
+  static LanguageController get to => Get.find();
+
+  final Rx<Locale?> _currentLocale = Rx<Locale?>(null);
+  Locale? get currentLocale => _currentLocale.value;
 
   @override
-  Locale? build() {
-    Future.microtask(() => _loadLanguage());
-    return null; // System default
+  void onInit() {
+    super.onInit();
+    _loadLanguage();
   }
 
   Locale? _stringToLocale(String? localeString) {
@@ -32,18 +36,26 @@ class LanguageNotifier extends Notifier<Locale?> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final lang = prefs.getString(_key);
-      state = _stringToLocale(lang);
+      final locale = _stringToLocale(lang);
+      _currentLocale.value = locale;
+      _updateGetXLocale(locale);
     } catch (e) {
-      // Fail silently or log
+      _updateGetXLocale(null);
     }
   }
 
   Future<void> setLanguage(Locale? locale) async {
-    state = locale;
+    _currentLocale.value = locale;
+    _updateGetXLocale(locale);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, _localeToString(locale));
   }
-}
 
-final languageProvider =
-    NotifierProvider<LanguageNotifier, Locale?>(LanguageNotifier.new);
+  void _updateGetXLocale(Locale? locale) {
+    if (locale != null) {
+      Get.updateLocale(locale);
+    } else {
+      Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
+    }
+  }
+}

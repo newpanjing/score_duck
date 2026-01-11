@@ -1,15 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:get/get.dart';
-import '../data/language_provider.dart';
-import '../data/score_store.dart';
-import '../data/theme_provider.dart';
+import '../controllers/language_controller.dart';
+import '../controllers/theme_controller.dart';
+import '../controllers/game_controller.dart';
 import 'about_screen.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   Future<void> _launchURL(String urlString) async {
@@ -59,8 +58,9 @@ class SettingsScreen extends ConsumerWidget {
     return '跟随系统'; // Fallback
   }
 
-  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
-    final currentLocale = ref.watch(languageProvider);
+  void _showLanguagePicker(BuildContext context) {
+    final languageController = Get.find<LanguageController>();
+    final currentLocale = languageController.currentLocale;
     final languages = {
       null: '跟随系统',
       const Locale('en'): 'English',
@@ -102,13 +102,8 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
             onPressed: () {
-              ref.read(languageProvider.notifier).setLanguage(entry.key);
-              if (entry.key == null) {
-                Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
-              } else {
-                Get.updateLocale(entry.key!);
-              }
-              Navigator.pop(context); // Move pop after locale update
+              languageController.setLanguage(entry.key);
+              Navigator.pop(context);
             },
           );
         }).toList(),
@@ -123,9 +118,11 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentTheme = ref.watch(themeProvider);
-    final currentLocale = ref.watch(languageProvider);
+  Widget build(BuildContext context) {
+    final themeController = Get.find<ThemeController>();
+    final languageController = Get.find<LanguageController>();
+    final currentTheme = themeController.currentTheme;
+    final currentLocale = languageController.currentLocale;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
         (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
@@ -159,7 +156,7 @@ class SettingsScreen extends ConsumerWidget {
                     },
                     onValueChanged: (ThemeMode? value) {
                       if (value != null) {
-                        ref.read(themeProvider.notifier).setTheme(value);
+                        themeController.setTheme(value);
                       }
                     },
                   ),
@@ -173,7 +170,7 @@ class SettingsScreen extends ConsumerWidget {
                   title: Text('settings_language_title'.tr),
                   additionalInfo: Text(_getCurrentLanguage(currentLocale)),
                   trailing: const CupertinoListTileChevron(),
-                  onTap: () => _showLanguagePicker(context, ref),
+                  onTap: () => _showLanguagePicker(context),
                 ),
               ],
             ),
@@ -246,7 +243,7 @@ class SettingsScreen extends ConsumerWidget {
                                         isDestructiveAction: true,
                                         child: Text('settings_danger_zone_clear_data'.tr),
                                         onPressed: () async {
-                                          await ref.read(scoreProvider.notifier).clearAll();
+                                          await Get.find<GameController>().clearAll();
                                           if (context.mounted) Navigator.pop(context);
                                         },
                                       ),

@@ -1,85 +1,86 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:flutter_localizations/flutter_localizations.dart'; // Import for localization delegates
-import 'data/language_provider.dart';
-import 'data/theme_provider.dart';
-import 'router/app_router.dart'; // Re-add GoRouter provider import
-import 'localization.dart'; // Import your translations
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'controllers/language_controller.dart';
+import 'controllers/theme_controller.dart';
+import 'controllers/game_controller.dart';
+import 'localization.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize GetX localization before runApp
-  Get.locale = const Locale('en'); // Default to English
+  Get.locale = const Locale('en');
   Get.fallbackLocale = const Locale('en');
   Get.addTranslations(AppTranslations().keys);
 
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  // Initialize controllers
+  Get.put(LanguageController());
+  Get.put(ThemeController());
+  Get.put(GameController());
+
+  runApp(const MyApp());
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
-    final currentLocale = ref.watch(languageProvider);
+  State<MyApp> createState() => _MyAppState();
+}
 
-    ref.listen<Locale?>(languageProvider, (previous, next) {
-      if (next != null) {
-        Get.updateLocale(next);
+class _MyAppState extends State<MyApp> {
+  @override
+  Widget build(BuildContext context) {
+    final themeController = Get.find<ThemeController>();
+    final languageController = Get.find<LanguageController>();
+
+    return Obx(() {
+      final themeMode = themeController.currentTheme;
+      final currentLocale = languageController.currentLocale;
+
+      // Set initial locale for GetX based on currentLocale (from shared_preferences)
+      if (currentLocale != null) {
+        Get.locale = currentLocale;
       } else {
-        Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
+        Get.locale = Get.deviceLocale ?? const Locale('en');
       }
+
+      Brightness? brightness;
+      switch (themeMode) {
+        case ThemeMode.light:
+          brightness = Brightness.light;
+          break;
+        case ThemeMode.dark:
+          brightness = Brightness.dark;
+          break;
+        case ThemeMode.system:
+          brightness = null;
+          break;
+      }
+
+      return CupertinoApp.router(
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppTranslations().keys.keys.map((langCode) {
+          if (langCode.contains('-')) {
+            final parts = langCode.split('-');
+            return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
+          }
+          return Locale(langCode);
+        }).toList(),
+        locale: Get.locale,
+        theme: CupertinoThemeData(
+          brightness: brightness,
+          primaryColor: CupertinoColors.activeBlue,
+        ),
+        routerConfig: Get.find<GameController>().routerConfig,
+        debugShowCheckedModeBanner: false,
+      );
     });
-
-    // Set initial locale for GetX based on currentLocale (from shared_preferences)
-    // This ensures Get.locale is consistent with user's saved preference after app starts
-    if (currentLocale != null) {
-      Get.locale = currentLocale;
-    } else {
-      Get.locale = Get.deviceLocale ?? const Locale('en');
-    }
-
-    Brightness? brightness;
-    switch (themeMode) {
-      case ThemeMode.light:
-        brightness = Brightness.light;
-        break;
-      case ThemeMode.dark:
-        brightness = Brightness.dark;
-        break;
-      case ThemeMode.system:
-        brightness = null; // Let CupertinoApp decide based on system
-        break;
-    }
-
-    return CupertinoApp.router(
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: AppTranslations().keys.keys.map((langCode) {
-        if (langCode.contains('-')) {
-          final parts = langCode.split('-');
-          return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
-        }
-        return Locale(langCode);
-      }).toList(),
-      locale: Get.locale, // Use GetX's managed locale
-      theme: CupertinoThemeData(
-        brightness: brightness,
-        primaryColor: CupertinoColors.activeBlue,
-      ),
-      routerConfig: ref.watch(routerProvider),
-      debugShowCheckedModeBanner: false,
-    );
   }
 }

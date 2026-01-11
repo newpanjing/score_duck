@@ -1,14 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' as intl;
-import '../data/score_store.dart';
+import '../controllers/game_controller.dart';
 import '../models/game.dart';
 import 'create_game_screen.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void _showCreateGameSheet(BuildContext context) {
@@ -19,90 +17,85 @@ class HomeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final gamesAsync = ref.watch(scoreProvider);
+  Widget build(BuildContext context) {
+    final gameController = Get.find<GameController>();
 
-    return gamesAsync.when(
-      loading: () => const CupertinoPageScaffold(
-        child: Center(child: CupertinoActivityIndicator()),
-      ),
-      error: (error, stack) => CupertinoPageScaffold(
-        child: Center(child: Text('加载失败: $error')),
-      ),
-      data: (games) {
-        final systemBrightness = MediaQuery.of(context).platformBrightness;
-        final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
-            (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
-        return CupertinoPageScaffold(
-          backgroundColor: isDark 
-              ? const Color(0xFF000000)
-              : const Color(0xFFF5F5F7),
-          child: CustomScrollView(
-            slivers: [
-              CupertinoSliverNavigationBar(
-                largeTitle: Text('home_title'.tr),
-                trailing: CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  child: const Icon(CupertinoIcons.add),
-                  onPressed: () => _showCreateGameSheet(context),
-                ),
+    return Obx(() {
+      final games = gameController.games;
+      final systemBrightness = MediaQuery.of(context).platformBrightness;
+      final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+          (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
+
+      return CupertinoPageScaffold(
+        backgroundColor: isDark 
+            ? const Color(0xFF000000)
+            : const Color(0xFFF5F5F7),
+        child: CustomScrollView(
+          slivers: [
+            CupertinoSliverNavigationBar(
+              largeTitle: Text('home_title'.tr),
+              trailing: CupertinoButton(
+                padding: EdgeInsets.zero,
+                child: const Icon(CupertinoIcons.add),
+                onPressed: () => _showCreateGameSheet(context),
               ),
-              if (games.isEmpty)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          CupertinoIcons.game_controller,
-                          size: 64,
+            ),
+            if (games.isEmpty)
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        CupertinoIcons.game_controller,
+                        size: 64,
+                        color: CupertinoColors.systemGrey,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'home_no_games'.tr,
+                        style: const TextStyle(
+                          fontSize: 20,
                           color: CupertinoColors.systemGrey,
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'home_no_games'.tr,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: CupertinoColors.systemGrey,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        CupertinoButton.filled(
-                          child: Text('home_create_game'.tr),
-                          onPressed: () => _showCreateGameSheet(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              else
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final game = games[index];
-                      return _GameListItem(game: game);
-                    },
-                    childCount: games.length,
+                      ),
+                      const SizedBox(height: 24),
+                      CupertinoButton.filled(
+                        child: Text('home_create_game'.tr),
+                        onPressed: () => _showCreateGameSheet(context),
+                      ),
+                    ],
                   ),
                 ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 40),
+              )
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final game = games[index];
+                    return _GameListItem(game: game);
+                  },
+                  childCount: games.length,
+                ),
               ),
-            ],
-          ),
-        );
-      },
-    );
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 40),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
 
-class _GameListItem extends ConsumerWidget {
+class _GameListItem extends StatelessWidget {
   final Game game;
 
   const _GameListItem({required this.game});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final gameController = Get.find<GameController>();
     final dateFormat = intl.DateFormat('MM-dd HH:mm');
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
 
@@ -129,10 +122,10 @@ class _GameListItem extends ConsumerWidget {
             child: const Icon(CupertinoIcons.delete, color: CupertinoColors.white, size: 28),
           ),
           onDismissed: (_) {
-            ref.read(scoreProvider.notifier).deleteGame(game.id);
+            gameController.deleteGame(game.id);
           },
           child: GestureDetector(
-            onTap: () => context.push('/game/${game.id}'),
+            onTap: () => Get.toNamed('/game/${game.id}'),
             child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(

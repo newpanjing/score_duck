@@ -4,26 +4,25 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:get/get.dart';
-import '../data/score_store.dart';
+import '../controllers/game_controller.dart';
 import '../models/game.dart';
 import '../models/player.dart';
 import '../models/round.dart';
 
-class GameDetailScreen extends ConsumerStatefulWidget {
+class GameDetailScreen extends StatefulWidget {
   final String gameId;
 
   const GameDetailScreen({super.key, required this.gameId});
 
   @override
-  ConsumerState<GameDetailScreen> createState() => _GameDetailScreenState();
+  State<GameDetailScreen> createState() => _GameDetailScreenState();
 }
 
-class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
+class _GameDetailScreenState extends State<GameDetailScreen> {
   final GlobalKey _boundaryKey = GlobalKey();
 
   @override
@@ -79,31 +78,25 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gamesAsync = ref.watch(scoreProvider);
+    final gameController = Get.find<GameController>();
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
 
-    return gamesAsync.when(
-      loading: () => const CupertinoPageScaffold(
-        child: Center(child: CupertinoActivityIndicator()),
-      ),
-      error: (error, stack) => CupertinoPageScaffold(
-        child: Center(child: Text('加载失败: $error')),
-      ),
-      data: (games) {
-        final game = games.cast<Game?>().firstWhere(
-              (g) => g?.id == widget.gameId,
-              orElse: () => null,
-            );
-
-        if (game == null) {
-          return CupertinoPageScaffold(
-            child: Center(child: Text('game_detail_found_no_game'.tr)),
+    return Obx(() {
+      final games = gameController.games;
+      final game = games.cast<Game?>().firstWhere(
+            (g) => g?.id == widget.gameId,
+            orElse: () => null,
           );
-        }
 
-        final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-
+      if (game == null) {
         return CupertinoPageScaffold(
+          child: Center(child: Text('game_detail_found_no_game'.tr)),
+        );
+      }
+
+      final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+
+      return CupertinoPageScaffold(
           backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
           navigationBar: CupertinoNavigationBar(
             backgroundColor: isDark
@@ -675,17 +668,17 @@ class _EmptyState extends StatelessWidget {
 
 // --- 记分弹窗 (Add Round Sheet) ---
 
-class _AddRoundSheet extends ConsumerStatefulWidget {
+class _AddRoundSheet extends StatefulWidget {
   final Game game;
   final Round? initialRound;
 
   const _AddRoundSheet({required this.game, this.initialRound});
 
   @override
-  ConsumerState<_AddRoundSheet> createState() => _AddRoundSheetState();
+  State<_AddRoundSheet> createState() => _AddRoundSheetState();
 }
 
-class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
+class _AddRoundSheetState extends State<_AddRoundSheet> {
   late Map<String, int> _currentScores;
   late Map<String, TextEditingController> _playerControllers;
 
@@ -714,23 +707,25 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
   }
 
   void _saveRound() {
+    final gameController = Get.find<GameController>();
     if (widget.initialRound != null) {
       final updatedRound = Round(
         id: widget.initialRound!.id,
         timestamp: widget.initialRound!.timestamp,
         scores: _currentScores,
       );
-      ref.read(scoreProvider.notifier).updateRoundInGame(widget.game.id, updatedRound);
+      gameController.updateRoundInGame(widget.game.id, updatedRound);
     } else {
       final round = Round(scores: _currentScores);
-      ref.read(scoreProvider.notifier).addRoundToGame(widget.game.id, round);
+      gameController.addRoundToGame(widget.game.id, round);
     }
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
-    final baseScores = ref.watch(baseScoresProvider);
+    final gameController = Get.find<GameController>();
+    final baseScores = gameController.baseScores;
     final int baseScore = baseScores[widget.game.id] ?? 1;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
@@ -808,7 +803,7 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
             value: baseScore,
             onChanged: (val) {
               if (val > 0) {
-                ref.read(baseScoresProvider.notifier).setScore(widget.game.id, val);
+                Get.find<GameController>().setBaseScore(widget.game.id, val);
               }
             },
           ),
