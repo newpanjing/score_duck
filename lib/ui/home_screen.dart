@@ -181,31 +181,6 @@ class _GameListItem extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              CupertinoColors.activeBlue.withValues(alpha: 0.15),
-                              CupertinoColors.activeBlue.withValues(alpha: 0.05),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: CupertinoColors.activeBlue.withValues(alpha: 0.2),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          game.type.label,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: CupertinoColors.activeBlue,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 16),

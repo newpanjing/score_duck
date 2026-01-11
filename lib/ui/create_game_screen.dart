@@ -64,7 +64,6 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
 
     final game = Game(
       name: _nameController.text,
-      type: GameType.generic,
       players: players,
     );
 

@@ -63,7 +63,6 @@ class ScoreNotifier extends AsyncNotifier<List<Game>> {
           Game(
             id: game.id,
             name: game.name,
-            type: game.type,
             createdAt: game.createdAt,
             players: game.players,
             rounds: [...game.rounds, round],
@@ -82,7 +81,6 @@ class ScoreNotifier extends AsyncNotifier<List<Game>> {
           Game(
             id: game.id,
             name: game.name,
-            type: game.type,
             createdAt: game.createdAt,
             players: game.players,
             rounds: [
