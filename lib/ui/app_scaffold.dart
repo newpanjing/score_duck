@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 
 class AppScaffold extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -13,8 +14,9 @@ class AppScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final brightness = CupertinoTheme.of(context).brightness ?? Brightness.light;
-    final isDark = brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
 
     return Scaffold(
       body: Stack(
@@ -63,7 +65,7 @@ class AppScaffold extends StatelessWidget {
                           Expanded(
                             child: _BottomBarItem(
                               icon: CupertinoIcons.home,
-                              label: '比赛',
+                              label: 'home_tab_title'.tr,
                               isSelected: navigationShell.currentIndex == 0,
                               onTap: () => _onTap(context, 0),
                             ),
@@ -71,7 +73,7 @@ class AppScaffold extends StatelessWidget {
                           Expanded(
                             child: _BottomBarItem(
                               icon: CupertinoIcons.settings,
-                              label: '设置',
+                              label: 'settings_tab_title'.tr,
                               isSelected: navigationShell.currentIndex == 1,
                               onTap: () => _onTap(context, 1),
                             ),
@@ -87,11 +89,7 @@ class AppScaffold extends StatelessWidget {
         ],
       ),
     );
-
-
-  }
-
-  void _onTap(BuildContext context, int index) {
+  }  void _onTap(BuildContext context, int index) {
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,

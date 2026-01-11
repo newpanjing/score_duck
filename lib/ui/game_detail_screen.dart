@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:get/get.dart';
 import '../data/score_store.dart';
 import '../models/game.dart';
 import '../models/player.dart';
@@ -47,7 +48,7 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
 
   Future<void> _shareScore() async {
     try {
-      final RenderRepaintBoundary boundary = 
+      final RenderRepaintBoundary boundary =
           _boundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -57,15 +58,12 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
       final file = await File('${tempDir.path}/score_share.png').create();
       await file.writeAsBytes(pngBytes);
 
-      final result = await Share.shareXFiles(
-        [XFile(file.path)],
-        text: '这是我们的比赛实时比分！',
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: 'game_detail_share_text'.tr,
+        ),
       );
-      
-      if (!mounted) return;
-      if (result.status == ShareResultStatus.success) {
-        debugPrint('分享成功');
-      }
     } catch (e) {
       debugPrint('分享失败: $e');
     }
@@ -93,13 +91,13 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
       ),
       data: (games) {
         final game = games.cast<Game?>().firstWhere(
-          (g) => g?.id == widget.gameId,
-          orElse: () => null,
-        );
+              (g) => g?.id == widget.gameId,
+              orElse: () => null,
+            );
 
         if (game == null) {
-          return const CupertinoPageScaffold(
-            child: Center(child: Text('未找到比赛')),
+          return CupertinoPageScaffold(
+            child: Center(child: Text('game_detail_found_no_game'.tr)),
           );
         }
 
@@ -108,7 +106,9 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
         return CupertinoPageScaffold(
           backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
           navigationBar: CupertinoNavigationBar(
-            backgroundColor: isDark ? const Color(0xFF000000).withValues(alpha: 0.8) : const Color(0xFFF2F2F7).withValues(alpha: 0.8),
+            backgroundColor: isDark
+                ? const Color(0xFF000000).withValues(alpha: 0.8)
+                : const Color(0xFFF2F2F7).withValues(alpha: 0.8),
             border: null,
             middle: Text(game.name, style: const TextStyle(fontWeight: FontWeight.w700)),
             trailing: Row(
@@ -123,7 +123,9 @@ class _GameDetailScreenState extends ConsumerState<GameDetailScreen> {
                   padding: EdgeInsets.zero,
                   onPressed: _toggleOrientation,
                   child: Icon(
-                    isLandscape ? CupertinoIcons.device_phone_portrait : CupertinoIcons.device_phone_landscape,
+                    isLandscape
+                        ? CupertinoIcons.device_phone_portrait
+                        : CupertinoIcons.device_phone_landscape,
                     size: 20,
                   ),
                 ),
@@ -166,7 +168,7 @@ class _PortraitLayout extends StatelessWidget {
   final GlobalKey repaintKey;
 
   const _PortraitLayout({
-    required this.game, 
+    required this.game,
     required this.onEditRound,
     required this.repaintKey,
   });
@@ -209,8 +211,6 @@ class _LandscapeLayout extends StatelessWidget {
   }
 }
 
-// --- 1. 计分板 (Standings Board) ---
-
 class _StandingsBoard extends StatelessWidget {
   final Game game;
 
@@ -247,12 +247,15 @@ class _StandingsBoard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    '当前比分',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: CupertinoColors.systemGrey),
+                  Text(
+                    'game_detail_current_score'.tr,
+                    style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.systemGrey),
                   ),
                   Text(
-                    DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now()),
+                    intl.DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now()),
                     style: const TextStyle(fontSize: 10, color: CupertinoColors.systemGrey2),
                   ),
                 ],
@@ -265,8 +268,11 @@ class _StandingsBoard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    '第 ${game.rounds.length} 局',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: CupertinoColors.activeBlue),
+                    'game_detail_round_count'.trParams({'count': game.rounds.length.toString()}),
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.activeBlue),
                   ),
                 ),
             ],
@@ -279,7 +285,7 @@ class _StandingsBoard extends StatelessWidget {
                 final score = totalScores[player.id] ?? 0;
                 final rank = sortedPlayers.indexOf(player);
                 final isTop = rank == 0 && game.rounds.isNotEmpty;
-                
+
                 String prefix = '';
                 if (game.rounds.isNotEmpty) {
                   if (rank == 0) {
@@ -300,7 +306,7 @@ class _StandingsBoard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '$prefix${player.name}',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -308,12 +314,14 @@ class _StandingsBoard extends StatelessWidget {
                       Text(
                         '$score',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 32,
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
                           color: score == 0
                               ? CupertinoColors.systemGrey
-                              : (score > 0 ? CupertinoColors.systemRed : CupertinoColors.systemGreen),
+                              : (score > 0
+                                  ? CupertinoColors.systemRed
+                                  : CupertinoColors.systemGreen),
                         ),
                       ),
                     ],
@@ -343,9 +351,9 @@ class _RankBadge extends StatelessWidget {
         color: const Color(0xFFFFD700).withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: const Text(
-        '领跑',
-        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFB8860B)),
+      child: Text(
+        'game_detail_leading'.tr,
+        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFB8860B)),
       ),
     );
   }
@@ -377,7 +385,7 @@ class _RoundTimeline extends StatelessWidget {
       itemBuilder: (context, index) {
         final round = rounds[index];
         final roundNumber = game.rounds.length - index;
-        
+
         return Column(
           children: [
             Padding(
@@ -391,7 +399,7 @@ class _RoundTimeline extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '第 $roundNumber 局',
+                          'game_detail_round_n'.trParams({'count': roundNumber.toString()}),
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
@@ -401,7 +409,7 @@ class _RoundTimeline extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          DateFormat('HH:mm').format(round.timestamp),
+                          intl.DateFormat('HH:mm').format(round.timestamp),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
@@ -473,7 +481,7 @@ class _TimelineItem extends StatelessWidget {
                     Text(
                       p.name,
                       style: const TextStyle(
-                        fontSize: 14, 
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: CupertinoColors.systemGrey,
                       ),
@@ -489,7 +497,9 @@ class _TimelineItem extends StatelessWidget {
                         letterSpacing: -1,
                         color: score == 0
                             ? CupertinoColors.systemGrey
-                            : (score > 0 ? CupertinoColors.systemRed : CupertinoColors.systemGreen),
+                            : (score > 0
+                                ? CupertinoColors.systemRed
+                                : CupertinoColors.systemGreen),
                       ),
                     ),
                   ],
@@ -512,7 +522,9 @@ class _LeaderboardSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     final totalScores = game.totalScores;
     final sortedPlayers = game.players.toList()
       ..sort((a, b) => (totalScores[b.id] ?? 0).compareTo(totalScores[a.id] ?? 0));
@@ -522,11 +534,11 @@ class _LeaderboardSidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 24, 20, 16),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
             child: Text(
-              '当前排名',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+              'game_detail_leaderboard'.tr,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
           ),
           Expanded(
@@ -536,16 +548,16 @@ class _LeaderboardSidebar extends StatelessWidget {
               itemBuilder: (context, index) {
                 final player = sortedPlayers[index];
                 final score = totalScores[player.id] ?? 0;
-                
+
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: index == 0 
+                    color: index == 0
                         ? CupertinoColors.activeBlue.withValues(alpha: 0.05)
                         : (isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF9F9F9)),
                     borderRadius: BorderRadius.circular(16),
-                    border: index == 0 
+                    border: index == 0
                         ? Border.all(color: CupertinoColors.activeBlue.withValues(alpha: 0.3))
                         : null,
                   ),
@@ -566,7 +578,9 @@ class _LeaderboardSidebar extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                           color: score == 0
                               ? CupertinoColors.systemGrey
-                              : (score > 0 ? CupertinoColors.systemRed : CupertinoColors.systemGreen),
+                              : (score > 0
+                                  ? CupertinoColors.systemRed
+                                  : CupertinoColors.systemGreen),
                         ),
                       ),
                     ],
@@ -648,9 +662,10 @@ class _EmptyState extends StatelessWidget {
           children: [
             const Icon(CupertinoIcons.chart_bar, size: 80),
             const SizedBox(height: 16),
-            const Text('暂无比赛记录', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            Text('game_detail_no_rounds'.tr,
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            const Text('记录你的每一场精彩瞬间', style: TextStyle(fontSize: 14)),
+            Text('game_detail_start_scoring'.tr, style: const TextStyle(fontSize: 14)),
           ],
         ),
       ),
@@ -717,7 +732,9 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
   Widget build(BuildContext context) {
     final baseScores = ref.watch(baseScoresProvider);
     final int baseScore = baseScores[widget.game.id] ?? 1;
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
@@ -735,8 +752,7 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
               children: [
                 _buildBaseScoreSection(baseScore, isDark),
                 const SizedBox(height: 24),
-                ...widget.game.players.map((p) =>
-                    _buildPlayerInput(p, baseScore, isDark)),
+                ...widget.game.players.map((p) => _buildPlayerInput(p, baseScore, isDark)),
                 const SizedBox(height: 40),
               ],
             ),
@@ -753,16 +769,16 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           CupertinoButton(
-            child: const Text('取消'),
+            child: Text('common_cancel'.tr),
             onPressed: () => Navigator.of(context).pop(),
           ),
           Text(
-            isEditing ? '修改记录' : '新的一局',
+            isEditing ? 'game_detail_edit_round'.tr : 'game_detail_add_round'.tr,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
           ),
           CupertinoButton(
             onPressed: _saveRound,
-            child: const Text('完成', style: TextStyle(fontWeight: FontWeight.bold)),
+            child: Text('common_done'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -779,17 +795,21 @@ class _AddRoundSheetState extends ConsumerState<_AddRoundSheet> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('基础分', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              Text('点击步长', style: TextStyle(fontSize: 11, color: CupertinoColors.systemGrey2)),
+              Text('game_detail_base_score'.tr,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text('game_detail_step_size'.tr,
+                  style: const TextStyle(fontSize: 11, color: CupertinoColors.systemGrey2)),
             ],
           ),
           _Stepper(
             value: baseScore,
             onChanged: (val) {
-              if (val > 0) ref.read(baseScoresProvider.notifier).setScore(widget.game.id, val);
+              if (val > 0) {
+                ref.read(baseScoresProvider.notifier).setScore(widget.game.id, val);
+              }
             },
           ),
         ],
@@ -848,7 +868,9 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     final color = isDark ? const Color(0xFF2C2C2E) : const Color(0xFFF2F2F7);
 
     return Container(
@@ -869,7 +891,9 @@ class _Stepper extends StatelessWidget {
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: isScore ? (value >= 0 ? CupertinoColors.activeBlue : CupertinoColors.systemRed) : null,
+                color: isScore
+                    ? (value >= 0 ? CupertinoColors.activeBlue : CupertinoColors.systemRed)
+                    : null,
               ),
             ),
           ),
@@ -887,7 +911,9 @@ class _StepBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     return GestureDetector(
       onTap: onTap,
       child: Container(

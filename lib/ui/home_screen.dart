@@ -2,7 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart' as intl;
 import '../data/score_store.dart';
 import '../models/game.dart';
 import 'create_game_screen.dart';
@@ -29,7 +30,9 @@ class HomeScreen extends ConsumerWidget {
         child: Center(child: Text('加载失败: $error')),
       ),
       data: (games) {
-        final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+        final systemBrightness = MediaQuery.of(context).platformBrightness;
+        final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+            (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
         return CupertinoPageScaffold(
           backgroundColor: isDark 
               ? const Color(0xFF000000)
@@ -37,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
           child: CustomScrollView(
             slivers: [
               CupertinoSliverNavigationBar(
-                largeTitle: const Text('记分鸭'),
+                largeTitle: Text('home_title'.tr),
                 trailing: CupertinoButton(
                   padding: EdgeInsets.zero,
                   child: const Icon(CupertinoIcons.add),
@@ -56,16 +59,16 @@ class HomeScreen extends ConsumerWidget {
                           color: CupertinoColors.systemGrey,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
-                          '还没有比赛',
-                          style: TextStyle(
+                        Text(
+                          'home_no_games'.tr,
+                          style: const TextStyle(
                             fontSize: 20,
                             color: CupertinoColors.systemGrey,
                           ),
                         ),
                         const SizedBox(height: 24),
                         CupertinoButton.filled(
-                          child: const Text('开始新比赛'),
+                          child: Text('home_create_game'.tr),
                           onPressed: () => _showCreateGameSheet(context),
                         ),
                       ],
@@ -100,7 +103,7 @@ class _GameListItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dateFormat = DateFormat('MM-dd HH:mm');
+    final dateFormat = intl.DateFormat('MM-dd HH:mm');
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
 
     return Container(
@@ -129,7 +132,7 @@ class _GameListItem extends ConsumerWidget {
             ref.read(scoreProvider.notifier).deleteGame(game.id);
           },
           child: GestureDetector(
-            onTap: () => context.go('/game/${game.id}'),
+            onTap: () => context.push('/game/${game.id}'),
             child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -270,14 +273,14 @@ class _GameListItem extends ConsumerWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
+                            const Icon(
                               CupertinoIcons.chart_bar_fill,
                               size: 14,
                               color: CupertinoColors.activeGreen,
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              '${game.rounds.length} 局',
+                              'home_game_count'.trParams({'count': game.rounds.length.toString()}),
                               style: const TextStyle(
                                 color: CupertinoColors.activeGreen,
                                 fontSize: 13,
@@ -298,4 +301,3 @@ class _GameListItem extends ConsumerWidget {
     );
   }
 }
-

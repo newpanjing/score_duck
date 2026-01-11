@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:get/get.dart';
+import '../data/language_provider.dart';
 import '../data/score_store.dart';
 import '../data/theme_provider.dart';
 import 'about_screen.dart';
@@ -21,8 +23,10 @@ class SettingsScreen extends ConsumerWidget {
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: 'newpanjing@icloud.com',
-      query: encodeQueryParameters(<String, String>{
-        'subject': 'ScoreDuckAPP Feedback from ${await PackageInfo.fromPlatform().then((value) => value.version)}',
+      query: _encodeQueryParameters(<String, String>{
+        'subject': 'settings_support_feedback_subject'.trParams({
+          'version': await PackageInfo.fromPlatform().then((value) => value.version),
+        }),
       }),
     );
     if (!await launchUrl(emailLaunchUri)) {
@@ -30,30 +34,114 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
-  String? encodeQueryParameters(Map<String, String> params) {
+  String? _encodeQueryParameters(Map<String, String> params) {
     return params.entries
         .map((MapEntry<String, String> e) =>
             '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
         .join('&');
   }
 
+  String _getCurrentLanguage(Locale? locale) {
+    if (locale == null) {
+      return '跟随系统';
+    }
+    if (locale.languageCode == 'en') return 'English';
+    if (locale.languageCode == 'zh') {
+      if (locale.scriptCode == 'Hans') return '中文(简体)';
+      if (locale.scriptCode == 'Hant') return '中文(繁體)';
+    }
+    if (locale.languageCode == 'es') return 'Español';
+    if (locale.languageCode == 'fr') return 'Français';
+    if (locale.languageCode == 'de') return 'Deutsch';
+    if (locale.languageCode == 'hi') return 'हिन्दी';
+    if (locale.languageCode == 'ar') return 'العربية';
+
+    return '跟随系统'; // Fallback
+  }
+
+  void _showLanguagePicker(BuildContext context, WidgetRef ref) {
+    final currentLocale = ref.watch(languageProvider);
+    final languages = {
+      null: '跟随系统',
+      const Locale('en'): 'English',
+      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'):
+          '中文(简体)',
+      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'):
+          '中文(繁體)',
+      const Locale('es'): 'Español',
+      const Locale('fr'): 'Français',
+      const Locale('de'): 'Deutsch',
+      const Locale('hi'): 'हिन्दी',
+      const Locale('ar'): 'العربية',
+    };
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+        title: Text('settings_language_title'.tr),
+        actions: languages.entries.map((entry) {
+          final isSelected = entry.key == currentLocale;
+          return CupertinoActionSheetAction(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  entry.value,
+                  style: TextStyle(
+                    color: isSelected ? CupertinoColors.activeBlue : null,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    CupertinoIcons.check_mark,
+                    color: CupertinoColors.activeBlue,
+                    size: 20,
+                  ),
+                ]
+              ],
+            ),
+            onPressed: () {
+              ref.read(languageProvider.notifier).setLanguage(entry.key);
+              if (entry.key == null) {
+                Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
+              } else {
+                Get.updateLocale(entry.key!);
+              }
+              Navigator.pop(context); // Move pop after locale update
+            },
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          child: Text('common_cancel'.tr),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.watch(themeProvider);
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final currentLocale = ref.watch(languageProvider);
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
 
     return CupertinoPageScaffold(
       backgroundColor: isDark 
           ? CupertinoColors.systemBackground 
           : CupertinoColors.systemGroupedBackground,
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('设置'),
+      navigationBar: CupertinoNavigationBar(
+        middle: Text('settings_title'.tr),
       ),
       child: SafeArea(
         child: ListView(
           children: [
             CupertinoListSection.insetGrouped(
-              header: const Text('外观'),
+              header: Text('settings_appearance'.tr),
               children: [
                 CupertinoListTile(
                   leading: Icon(
@@ -61,13 +149,13 @@ class SettingsScreen extends ConsumerWidget {
                     color: CupertinoColors.systemOrange,
                     size: 22,
                   ),
-                  title: const Text('主题模式'),
+                  title: Text('settings_theme_mode'.tr),
                   trailing: CupertinoSlidingSegmentedControl<ThemeMode>(
                     groupValue: currentTheme,
-                    children: const {
-                      ThemeMode.system: Text('系统', style: TextStyle(fontSize: 13)),
-                      ThemeMode.light: Text('浅色', style: TextStyle(fontSize: 13)),
-                      ThemeMode.dark: Text('深色', style: TextStyle(fontSize: 13)),
+                    children: {
+                      ThemeMode.system: Text('settings_theme_system'.tr, style: const TextStyle(fontSize: 13)),
+                      ThemeMode.light: Text('settings_theme_light'.tr, style: const TextStyle(fontSize: 13)),
+                      ThemeMode.dark: Text('settings_theme_dark'.tr, style: const TextStyle(fontSize: 13)),
                     },
                     onValueChanged: (ThemeMode? value) {
                       if (value != null) {
@@ -76,14 +164,25 @@ class SettingsScreen extends ConsumerWidget {
                     },
                   ),
                 ),
+                CupertinoListTile(
+                  leading: const Icon(
+                    CupertinoIcons.globe,
+                    color: CupertinoColors.systemBlue,
+                    size: 22,
+                  ),
+                  title: Text('settings_language_title'.tr),
+                  additionalInfo: Text(_getCurrentLanguage(currentLocale)),
+                  trailing: const CupertinoListTileChevron(),
+                  onTap: () => _showLanguagePicker(context, ref),
+                ),
               ],
             ),
             CupertinoListSection.insetGrouped(
-              header: const Text('关于'),
+              header: Text('settings_about_title'.tr),
               children: [
                 CupertinoListTile(
                   leading: const Icon(CupertinoIcons.info_circle_fill, color: CupertinoColors.systemBlue),
-                  title: const Text('关于记分鸭'),
+                  title: Text('settings_about_about_app'.tr),
                   trailing: const CupertinoListTileChevron(),
                   onTap: () {
                     Navigator.of(context).push(
@@ -93,7 +192,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 CupertinoListTile(
                   leading: const Icon(CupertinoIcons.tag_fill, color: CupertinoColors.systemGreen),
-                  title: const Text('当前版本'),
+                  title: Text('settings_about_version'.tr),
                   additionalInfo: FutureBuilder<PackageInfo>(
                     future: PackageInfo.fromPlatform(),
                     builder: (context, snapshot) => Text(snapshot.data?.version ?? '1.0.0'),
@@ -101,65 +200,66 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            CupertinoListSection.insetGrouped(
-              header: const Text('反馈与支持'),
-              children: [
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.mail, color: CupertinoColors.systemRed),
-                  title: const Text('意见反馈'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: _sendEmail,
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.app_fill, color: CupertinoColors.systemPurple),
-                  title: const Text('更多应用'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => _launchURL('https://apps.apple.com/developer/id1630712468'), // 替换为您的开发者链接
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.person_solid, color: CupertinoColors.activeBlue),
-                  title: const Text('关注作者'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => _launchURL('https://www.xiaohongshu.com/user/profile/63eddd81000000001001d67c'), // 替换为您的个人主页
-                ),
-              ],
-            ),
-             CupertinoListSection.insetGrouped(
-              header: const Text('危险区域'),
-              children: [
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.trash_fill, color: CupertinoColors.destructiveRed),
-                  title: const Text('清除所有数据', style: TextStyle(color: CupertinoColors.destructiveRed)),
-                  onTap: () {
-                     showCupertinoDialog(
-                      context: context, 
-                      builder: (context) => CupertinoAlertDialog(
-                        title: const Text('确认清除'),
-                        content: const Text('确定要删除所有比赛记录吗？此操作无法撤销。'),
-                        actions: [
-                          CupertinoDialogAction(
-                            isDefaultAction: true,
-                            child: const Text('取消'),
-                            onPressed: () => Navigator.pop(context),
-                          ),
-                          CupertinoDialogAction(
-                            isDestructiveAction: true,
-                            child: const Text('清除'),
-                            onPressed: () async {
-                              await ref.read(scoreProvider.notifier).clearAll();
-                              if (context.mounted) Navigator.pop(context);
-                            },
-                          ),
-                        ],
-                      )
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+                                    CupertinoListSection.insetGrouped(
+                                      header: Text('settings_support_title'.tr),                          children: [
+                            CupertinoListTile(
+                              leading: const Icon(CupertinoIcons.mail, color: CupertinoColors.systemRed),
+                              title: Text('settings_support_feedback'.tr),
+                              trailing: const CupertinoListTileChevron(),
+                              onTap: _sendEmail,
+                            ),
+                            CupertinoListTile(
+                              leading: const Icon(CupertinoIcons.app_fill, color: CupertinoColors.systemPurple),
+                              title: Text('settings_support_more_apps'.tr),
+                              trailing: const CupertinoListTileChevron(),
+                              onTap: () => _launchURL('https://apps.apple.com/developer/id1630712468'), // 替换为您的开发者链接
+                            ),
+                            CupertinoListTile(
+                              leading: const Icon(CupertinoIcons.person_solid, color: CupertinoColors.activeBlue),
+                              title: Text('settings_support_follow_author'.tr),
+                              trailing: const CupertinoListTileChevron(),
+                              onTap: () => _launchURL('https://www.xiaohongshu.com/user/profile/63eddd81000000001001d67c'), // 替换为您的个人主页
+                            ),
+                          ],
+                        ),
+                                     CupertinoListSection.insetGrouped(
+                                       header: Text('settings_danger_zone_title'.tr),                          children: [
+                            CupertinoListTile(
+                              leading: const Icon(CupertinoIcons.trash_fill, color: CupertinoColors.destructiveRed),
+                              title: Text('settings_danger_zone_clear_data'.tr,
+                      style: const TextStyle(color: CupertinoColors.destructiveRed)),
+                              onTap: () {
+                                 showCupertinoDialog(
+                                  context: context, 
+                                  builder: (context) => CupertinoAlertDialog(
+                                                                  title: Text(
+                                                                      'settings_danger_zone_clear_confirm_title'.tr),
+                                                                  content: Text(
+                                                                      'settings_danger_zone_clear_confirm_content'.tr),
+                                    actions: [
+                                      CupertinoDialogAction(
+                                        isDefaultAction: true,
+                                        child: Text('common_cancel'.tr),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                      CupertinoDialogAction(
+                                        isDestructiveAction: true,
+                                        child: Text('settings_danger_zone_clear_data'.tr),
+                                        onPressed: () async {
+                                          await ref.read(scoreProvider.notifier).clearAll();
+                                          if (context.mounted) Navigator.pop(context);
+                                        },
+                                      ),
+                                    ],
+                                  )
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+            }

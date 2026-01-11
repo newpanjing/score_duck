@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:get/get.dart';
 import '../data/score_store.dart';
 import '../models/game.dart';
 import '../models/player.dart';
@@ -21,10 +21,11 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
   @override
   void initState() {
     super.initState();
+    _nameController.text = 'create_game_default_game_name'.tr;
     for (int i = 0; i < 3; i++) {
-      _playerControllers.add(TextEditingController(text: '玩家 ${i + 1}'));
+      _playerControllers.add(TextEditingController(
+          text: 'create_game_default_player_name'.trParams({'count': '${i + 1}'})));
     }
-    _nameController.text = '新比赛';
   }
 
   @override
@@ -42,9 +43,9 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     if (newCount > _playerControllers.length) {
       int diff = newCount - _playerControllers.length;
       for (int i = 0; i < diff; i++) {
-        _playerControllers.add(
-          TextEditingController(text: '玩家 ${_playerControllers.length + 1}'),
-        );
+        _playerControllers.add(TextEditingController(
+            text: 'create_game_default_player_name'
+                .trParams({'count': '${_playerControllers.length + 1}'})));
       }
     } else if (newCount < _playerControllers.length) {
       int diff = _playerControllers.length - newCount;
@@ -59,7 +60,7 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     if (_nameController.text.isEmpty) return;
 
     final players = _playerControllers
-        .map((c) => Player(name: c.text.isEmpty ? 'Unknown' : c.text))
+        .map((c) => Player(name: c.text.isEmpty ? 'common_unknown'.tr : c.text))
         .toList();
 
     final game = Game(
@@ -70,13 +71,15 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     await ref.read(scoreProvider.notifier).addGame(game);
     if (mounted) {
       Navigator.of(context).pop();
-      context.go('/game/${game.id}');
+      Get.toNamed('/game/${game.id}');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
 
     return ClipRRect(
@@ -103,11 +106,11 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
                 child: Column(
                   children: [
                     _FormSection(
-                      title: '基本信息',
+                      title: 'create_game_basic_info'.tr,
                       children: [
                         _StyledTextField(
                           controller: _nameController,
-                          placeholder: '请输入比赛名称',
+                          placeholder: 'create_game_game_name_placeholder'.tr,
                           isDark: isDark,
                         ),
                         const SizedBox(height: 24),
@@ -125,7 +128,7 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
                     ),
                     const SizedBox(height: 24),
                     _FormSection(
-                      title: '玩家列表',
+                      title: 'create_game_player_list'.tr,
                       children: List.generate(_playerControllers.length, (index) {
                         return Padding(
                           padding: EdgeInsets.only(
@@ -158,7 +161,9 @@ class _ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
       decoration: BoxDecoration(
@@ -176,18 +181,18 @@ class _ScreenHeader extends StatelessWidget {
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             onPressed: onCancel,
-            child: const Text('取消', style: TextStyle(fontSize: 17)),
+            child: Text('common_cancel'.tr, style: const TextStyle(fontSize: 17)),
           ),
-          const Text(
-            '创建比赛',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Text(
+            'create_game_title'.tr,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           CupertinoButton(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             onPressed: onStart,
-            child: const Text(
-              '开始',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            child: Text(
+              'create_game_start'.tr,
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -204,7 +209,9 @@ class _FormSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    final systemBrightness = MediaQuery.of(context).platformBrightness;
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -212,7 +219,7 @@ class _FormSection extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: CupertinoColors.systemGrey,
@@ -304,9 +311,9 @@ class _PlayerCountSelector extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              '玩家人数',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            Text(
+              'create_game_player_count'.tr,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -315,7 +322,7 @@ class _PlayerCountSelector extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${count.toInt()} 人',
+                '${count.toInt()}',
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
@@ -389,7 +396,7 @@ class _PlayerInputRow extends StatelessWidget {
         Expanded(
           child: _StyledTextField(
             controller: controller,
-            placeholder: '玩家名字',
+            placeholder: 'create_game_player_name_placeholder'.tr,
             isDark: isDark,
           ),
         ),
