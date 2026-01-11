@@ -77,8 +77,8 @@ class SettingsScreen extends ConsumerWidget {
                           CupertinoDialogAction(
                             isDestructiveAction: true,
                             child: const Text('清除'),
-                            onPressed: () {
-                              ref.read(scoreProvider.notifier).clearAll();
+                            onPressed: () async {
+                              await ref.read(scoreProvider.notifier).clearAll();
                               Navigator.pop(context);
                             },
                           ),

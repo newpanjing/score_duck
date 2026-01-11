@@ -25,7 +25,7 @@ class AppScaffold extends StatelessWidget {
             right: 0,
             bottom: 0,
             child: SafeArea(
-              top: false,
+              bottom: false,
               child: Center(
                 child: Container(
                   width: 250,
