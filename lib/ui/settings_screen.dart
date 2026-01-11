@@ -22,7 +22,7 @@ class SettingsScreen extends ConsumerWidget {
       scheme: 'mailto',
       path: 'newpanjing@icloud.com',
       query: encodeQueryParameters(<String, String>{
-        'subject': '记分鸭意见反馈',
+        'subject': 'ScoreDuckAPP Feedback from ${await PackageInfo.fromPlatform().then((value) => value.version)}',
       }),
     );
     if (!await launchUrl(emailLaunchUri)) {
@@ -114,13 +114,13 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Icon(CupertinoIcons.app_fill, color: CupertinoColors.systemPurple),
                   title: const Text('更多应用'),
                   trailing: const CupertinoListTileChevron(),
-                  onTap: () => _launchURL('https://apps.apple.com/developer/id123456789'), // 替换为您的开发者链接
+                  onTap: () => _launchURL('https://apps.apple.com/developer/id1630712468'), // 替换为您的开发者链接
                 ),
                 CupertinoListTile(
                   leading: const Icon(CupertinoIcons.person_solid, color: CupertinoColors.activeBlue),
                   title: const Text('关注作者'),
                   trailing: const CupertinoListTileChevron(),
-                  onTap: () => _launchURL('https://github.com/newpanjing'), // 替换为您的个人主页
+                  onTap: () => _launchURL('https://www.xiaohongshu.com/user/profile/63eddd81000000001001d67c'), // 替换为您的个人主页
                 ),
               ],
             ),
