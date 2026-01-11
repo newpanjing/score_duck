@@ -69,8 +69,10 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
     );
 
     await ref.read(scoreProvider.notifier).addGame(game);
-    Navigator.of(context).pop();
-    context.go('/game/${game.id}');
+    if (mounted) {
+      Navigator.of(context).pop();
+      context.go('/game/${game.id}');
+    }
   }
 
   @override
@@ -87,29 +89,9 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
         ),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemGroupedBackground,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(44, 44),
-                    child: const Text('取消', style: TextStyle(fontSize: 17)),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  const Text('创建比赛', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600)),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(44, 44),
-                    onPressed: _saveGame,
-                    child: const Text('开始', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: CupertinoColors.activeBlue)),
-                  ),
-                ],
-              ),
+            _ScreenHeader(
+              onCancel: () => Navigator.of(context).pop(),
+              onStart: _saveGame,
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -117,223 +99,47 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
                   left: 20,
                   right: 20,
                   top: 8,
-                  bottom: keyboardHeight > 0 ? keyboardHeight + 20 : 20,
+                  bottom: keyboardHeight > 0 ? keyboardHeight + 20 : 40,
                 ),
                 child: Column(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2C2C2E) : CupertinoColors.systemBackground,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          if (!isDark)
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '基本信息',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: CupertinoColors.systemGrey,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            decoration: BoxDecoration(
-                              color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemBackground,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isDark 
-                                  ? CupertinoColors.white.withValues(alpha: 0.1)
-                                  : CupertinoColors.systemGrey4,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                if (!isDark)
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 2),
-                                  ),
-                              ],
-                            ),
-                            child: CupertinoTextField(
-                              controller: _nameController,
-                              placeholder: '请输入比赛名称',
-                              placeholderStyle: TextStyle(
-                                color: CupertinoColors.systemGrey.withValues(alpha: 0.6),
-                                fontSize: 17,
-                              ),
-                              decoration: null,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                                color: isDark ? CupertinoColors.white : CupertinoColors.black,
-                              ),
-                              padding: EdgeInsets.zero,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '玩家人数',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark ? CupertinoColors.white : CupertinoColors.black,
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: CupertinoColors.activeBlue.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '${_playerCount.toInt()}人',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700,
-                                    color: CupertinoColors.activeBlue,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          CupertinoSlider(
-                            value: _playerCount,
-                            min: 2,
-                            max: 12,
-                            divisions: 10,
-                            onChanged: (value) {
-                              setState(() {
-                                _playerCount = value;
-                                _updatePlayerCount(value.toInt());
-                              });
-                            },
-                          ),
-                        ],
-                      ),
+                    _FormSection(
+                      title: '基本信息',
+                      children: [
+                        _StyledTextField(
+                          controller: _nameController,
+                          placeholder: '请输入比赛名称',
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: 24),
+                        _PlayerCountSelector(
+                          count: _playerCount,
+                          isDark: isDark,
+                          onChanged: (value) {
+                            setState(() {
+                              _playerCount = value;
+                              _updatePlayerCount(value.toInt());
+                            });
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF2C2C2E) : CupertinoColors.systemBackground,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          if (!isDark)
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '玩家列表',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: CupertinoColors.systemGrey,
-                              letterSpacing: 0.5,
-                            ),
+                    const SizedBox(height: 24),
+                    _FormSection(
+                      title: '玩家列表',
+                      children: List.generate(_playerControllers.length, (index) {
+                        return Padding(
+                          padding: EdgeInsets.only(
+                            bottom: index < _playerControllers.length - 1 ? 16 : 0,
                           ),
-                          const SizedBox(height: 20),
-                          ...List.generate(_playerControllers.length, (index) {
-                            return Padding(
-                              padding: EdgeInsets.only(bottom: index < _playerControllers.length - 1 ? 12 : 0),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 40,
-                                    height: 40,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          CupertinoColors.activeBlue,
-                                          CupertinoColors.activeBlue.withValues(alpha: 0.7),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${index + 1}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: CupertinoColors.white,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                      decoration: BoxDecoration(
-                                        color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemBackground,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: isDark 
-                                            ? CupertinoColors.white.withValues(alpha: 0.1)
-                                            : CupertinoColors.systemGrey4,
-                                          width: 1.5,
-                                        ),
-                                        boxShadow: [
-                                          if (!isDark)
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.03),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                        ],
-                                      ),
-                                      child: CupertinoTextField(
-                                        controller: _playerControllers[index],
-                                        placeholder: '请输入玩家名字',
-                                        placeholderStyle: TextStyle(
-                                          color: CupertinoColors.systemGrey.withValues(alpha: 0.6),
-                                          fontSize: 16,
-                                        ),
-                                        decoration: null,
-                                        style: TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.w500,
-                                          color: isDark ? CupertinoColors.white : CupertinoColors.black,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
+                          child: _PlayerInputRow(
+                            index: index,
+                            controller: _playerControllers[index],
+                            isDark: isDark,
+                          ),
+                        );
+                      }),
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -341,6 +147,254 @@ class _CreateGameScreenState extends ConsumerState<CreateGameScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ScreenHeader extends StatelessWidget {
+  final VoidCallback onCancel;
+  final VoidCallback onStart;
+
+  const _ScreenHeader({required this.onCancel, required this.onStart});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemGroupedBackground,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? CupertinoColors.separator : CupertinoColors.systemGrey5,
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            onPressed: onCancel,
+            child: const Text('取消', style: TextStyle(fontSize: 17)),
+          ),
+          const Text(
+            '创建比赛',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          CupertinoButton(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            onPressed: onStart,
+            child: const Text(
+              '开始',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FormSection extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _FormSection({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: CupertinoColors.systemGrey,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF2C2C2E) : CupertinoColors.systemBackground,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: children,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _StyledTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String placeholder;
+  final bool isDark;
+
+  const _StyledTextField({
+    required this.controller,
+    required this.placeholder,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1C1C1E) : CupertinoColors.systemGrey6.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? CupertinoColors.systemGrey.withValues(alpha: 0.2) : Colors.transparent,
+          width: 1,
+        ),
+      ),
+      child: CupertinoTextField(
+        controller: controller,
+        placeholder: placeholder,
+        placeholderStyle: TextStyle(
+          color: CupertinoColors.systemGrey.withValues(alpha: 0.6),
+          fontSize: 16,
+        ),
+        decoration: null,
+        style: TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w500,
+          color: isDark ? CupertinoColors.white : CupertinoColors.black,
+        ),
+        padding: EdgeInsets.zero,
+      ),
+    );
+  }
+}
+
+class _PlayerCountSelector extends StatelessWidget {
+  final double count;
+  final bool isDark;
+  final ValueChanged<double> onChanged;
+
+  const _PlayerCountSelector({
+    required this.count,
+    required this.isDark,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              '玩家人数',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: CupertinoColors.activeBlue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${count.toInt()} 人',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: CupertinoColors.activeBlue,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: CupertinoSlider(
+            value: count,
+            min: 2,
+            max: 12,
+            divisions: 10,
+            onChanged: onChanged,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PlayerInputRow extends StatelessWidget {
+  final int index;
+  final TextEditingController controller;
+  final bool isDark;
+
+  const _PlayerInputRow({
+    required this.index,
+    required this.controller,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF64B5F6), Color(0xFF2196F3)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: CupertinoColors.activeBlue.withValues(alpha: 0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              '${index + 1}',
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: CupertinoColors.white,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StyledTextField(
+            controller: controller,
+            placeholder: '玩家名字',
+            isDark: isDark,
+          ),
+        ),
+      ],
     );
   }
 }
