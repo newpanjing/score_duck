@@ -58,6 +58,7 @@ class ZhHantTranslations {
     'settings_language_hi': '印地語',
     'settings_language_ar': '阿拉伯語',
     'settings_language_system': '跟隨系統',
+    'settings_welcome_screen': '顯示歡迎頁',
     'settings_about_title': '關於',
     'settings_about_about_app': '關於記分鴨',
     'settings_about_version': '目前版本',
@@ -78,5 +79,8 @@ class ZhHantTranslations {
     'about_privacy_no_cloud': '零雲端上傳，資料不經過伺服器',
     'about_privacy_local': '本地安全存儲，您的資料僅屬於您',
     'about_feedback_support': '回饋與支援',
+    'welcome_title': '歡迎使用記分鴨',
+    'welcome_subtitle': '簡單、優雅、安全的記分工具',
+    'welcome_start': '開始使用',
   };
 }

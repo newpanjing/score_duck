@@ -58,6 +58,7 @@ class ZhHansTranslations {
     'settings_language_hi': '印地语',
     'settings_language_ar': '阿拉伯语',
     'settings_language_system': '跟随系统',
+    'settings_welcome_screen': '显示欢迎页',
     'settings_about_title': '关于',
     'settings_about_about_app': '关于记分鸭',
     'settings_about_version': '当前版本',
@@ -78,5 +79,8 @@ class ZhHansTranslations {
     'about_privacy_no_cloud': '零云端上传，数据不经过服务器',
     'about_privacy_local': '本地安全存储，您的数据仅属于您',
     'about_feedback_support': '反馈与支持',
+    'welcome_title': '欢迎使用记分鸭',
+    'welcome_subtitle': '简单、优雅、安全的记分工具',
+    'welcome_start': '开始使用',
   };
 }

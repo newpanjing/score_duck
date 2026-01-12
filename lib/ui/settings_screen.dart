@@ -10,6 +10,7 @@ import '../controllers/theme_controller.dart';
 import '../controllers/game_controller.dart';
 import 'about_screen.dart';
 import 'widgets/language_picker.dart';
+import 'widgets/welcome_sheet.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -176,6 +177,18 @@ class SettingsScreen extends StatelessWidget {
                       future: PackageInfo.fromPlatform(),
                       builder: (context, snapshot) => Text(snapshot.data?.version ?? '1.0.0'),
                     ),
+                  ),
+                  CupertinoListTile(
+                    leading: const Icon(CupertinoIcons.hand_thumbsup_fill, color: CupertinoColors.systemYellow),
+                    title: Text('settings_welcome_screen'.tr),
+                    trailing: const CupertinoListTileChevron(),
+                    onTap: () {
+                      HapticFeedback.mediumImpact();
+                      showCupertinoModalPopup(
+                        context: context,
+                        builder: (context) => const WelcomeSheet(),
+                      );
+                    },
                   ),
                 ],
               ),

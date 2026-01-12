@@ -6,13 +6,38 @@ import 'package:intl/intl.dart' as intl;
 import '../controllers/game_controller.dart';
 import '../models/game.dart';
 import 'create_game_screen.dart';
+import 'widgets/welcome_sheet.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPrivacyPolicy();
+    });
+  }
+
+  Future<void> _checkPrivacyPolicy() async {
+    final controller = Get.find<GameController>();
+    if (await controller.shouldShowPrivacyPolicy()) {
+      if (!mounted) return;
+      showCupertinoModalPopup(
+        context: context,
+        barrierDismissible: false,
+        filter: null,
+        builder: (context) => const WelcomeSheet(),
+      );
+    }
+  }
+
   void _showCreateGameSheet(BuildContext context) {
-    // 触感反馈
-    HapticFeedback.mediumImpact();
     showCupertinoModalPopup(
       context: context,
       builder: (context) => const CreateGameScreen(),
@@ -92,6 +117,7 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _GameListItem extends StatelessWidget {
+
   final Game game;
 
   const _GameListItem({required this.game});

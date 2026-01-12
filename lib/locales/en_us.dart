@@ -58,6 +58,7 @@ class EnUsTranslations {
     'settings_language_hi': 'Hindi',
     'settings_language_ar': 'Arabic',
     'settings_language_system': 'System',
+    'settings_welcome_screen': 'Show Welcome Screen',
     'settings_about_title': 'About',
     'settings_about_about_app': 'About ScoreDuck',
     'settings_about_version': 'Version',
@@ -78,5 +79,8 @@ class EnUsTranslations {
     'about_privacy_no_cloud': 'Zero cloud upload, no server involved',
     'about_privacy_local': 'Local storage, your data belongs to you',
     'about_feedback_support': 'Feedback & Support',
+    'welcome_title': 'Welcome to ScoreDuck',
+    'welcome_subtitle': 'Simple, Elegant, Secure.',
+    'welcome_start': 'Get Started',
   };
 }

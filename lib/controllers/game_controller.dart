@@ -10,6 +10,7 @@ import '../models/round.dart';
 class GameController extends GetxController {
   static const _fileName = 'games.json';
   static const _baseScoresKey = 'base_scores';
+  static const _privacyPolicyKey = 'has_seen_privacy_policy';
   static GameController get to => Get.find();
 
   final RxList<Game> _games = <Game>[].obs;
@@ -23,6 +24,16 @@ class GameController extends GetxController {
     super.onInit();
     _loadGames();
     _loadBaseScores();
+  }
+
+  Future<bool> shouldShowPrivacyPolicy() async {
+    final prefs = await SharedPreferences.getInstance();
+    return !(prefs.getBool(_privacyPolicyKey) ?? false);
+  }
+
+  Future<void> markPrivacyPolicyAsSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_privacyPolicyKey, true);
   }
 
   Future<File> get _file async {
