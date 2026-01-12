@@ -1,3 +1,4 @@
+// 法语
 class FrTranslations {
   static const Map<String, String> keys = {
     'app_name': 'ScoreDuck',
@@ -14,8 +15,8 @@ class FrTranslations {
     'home_no_games': 'Pas de jeux',
     'home_start_first_game': 'Commencez votre premier jeu',
     'home_create_game': 'Nouveau jeu',
-    'home_game_count': '{}' ' Jeux',
-    'home_player_count': '{}' ' Joueurs',
+    'home_game_count': '@count' ' Jeux',
+    'home_player_count': '@count' ' Joueurs',
     'create_game_title': 'Créer un jeu',
     'create_game_start': 'Commencer',
     'create_game_basic_info': 'Informations de base',
@@ -25,13 +26,13 @@ class FrTranslations {
     'create_game_player_list': 'Liste des joueurs',
     'create_game_player_name_placeholder': 'Entrez le nom du joueur',
     'create_game_default_game_name': 'Nouveau jeu',
-    'create_game_default_player_name': 'Joueur {}',
+    'create_game_default_player_name': 'Joueur @count',
     'game_detail_found_no_game': 'Jeu non trouvé',
     'game_detail_leaderboard': 'Classement',
     'game_detail_current_score': 'Score en direct',
-    'game_detail_round_count': '{}' ' Tours',
+    'game_detail_round_count': '@count' ' Tours',
     'game_detail_leading': 'En tête',
-    'game_detail_round_n': 'Tour {}',
+    'game_detail_round_n': 'Tour @count',
     'game_detail_no_rounds': 'Aucun enregistrement',
     'game_detail_start_scoring':
         'Appuyez sur le bouton pour commencer à marquer',
@@ -63,7 +64,7 @@ class FrTranslations {
     'settings_about_version': 'Version',
     'settings_support_title': 'Commentaires et assistance',
     'settings_support_feedback': 'Commentaires',
-    'settings_support_feedback_subject': 'ScoreDuckAPP Commentaires (Version: {version})',
+    'settings_support_feedback_subject': 'ScoreDuckAPP Commentaires (Version: @version)',
     'settings_support_more_apps': 'Plus d\'applications',
     'settings_support_follow_author': 'Suivre l\'auteur',
     'settings_danger_zone_title': 'Zone de danger',

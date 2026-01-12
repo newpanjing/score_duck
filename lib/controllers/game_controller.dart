@@ -63,7 +63,7 @@ class GameController extends GetxController {
   }
 
   Future<void> deleteGame(String id) async {
-    _games.removeWhere((g) => g.id != id);
+    _games.removeWhere((g) => g.id == id);
     await _saveGames();
   }
 

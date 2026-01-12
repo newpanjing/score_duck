@@ -56,7 +56,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
       final tempDir = await getTemporaryDirectory();
       final file = await File('${tempDir.path}/score_share.png').create();
       await file.writeAsBytes(pngBytes);
-
+      // 触感反馈
+      HapticFeedback.mediumImpact();
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
@@ -69,6 +70,8 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
   }
 
   void _showAddRoundSheet(BuildContext context, Game game, {Round? round}) {
+    // 触感反馈
+    HapticFeedback.mediumImpact();
     showCupertinoModalPopup(
       context: context,
       barrierColor: CupertinoColors.black.withValues(alpha: 0.2),

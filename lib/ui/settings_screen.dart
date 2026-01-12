@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:scoreduck/locales/localization.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,6 +22,8 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Future<void> _sendEmail() async {
+    // 触感反馈
+    HapticFeedback.mediumImpact();
     final Uri emailLaunchUri = Uri(
       scheme: 'mailto',
       path: 'newpanjing@icloud.com',
@@ -48,8 +51,8 @@ class SettingsScreen extends StatelessWidget {
     }
     if (locale.languageCode == 'en') return 'English';
     if (locale.languageCode == 'zh') {
-      if (locale.scriptCode == 'Hans') return '中文(简体)';
-      if (locale.scriptCode == 'Hant') return '中文(繁體)';
+      if (locale.countryCode == 'CN') return '中文(简体)';
+      if (locale.countryCode == 'TW') return '中文(繁體)';
     }
     if (locale.languageCode == 'es') return 'Español';
     if (locale.languageCode == 'fr') return 'Français';
@@ -67,6 +70,8 @@ class SettingsScreen extends StatelessWidget {
 
     final initialIndex = languages.indexWhere((lang) => lang['locale'] == currentLocale);
     final scrollController = FixedExtentScrollController(initialItem: initialIndex >= 0 ? initialIndex : 0);
+    // 触感反馈
+    HapticFeedback.mediumImpact();
 
     showCupertinoModalPopup(
       context: context,
@@ -131,6 +136,8 @@ class SettingsScreen extends StatelessWidget {
                         if (value != null) {
                           themeController.setTheme(value);
                         }
+                        // 触感反馈
+                        HapticFeedback.mediumImpact();
                       },
                     ),
                   ),
@@ -155,6 +162,8 @@ class SettingsScreen extends StatelessWidget {
                     title: Text('settings_about_about_app'.tr),
                     trailing: const CupertinoListTileChevron(),
                     onTap: () {
+                      // 触感反馈
+                      HapticFeedback.mediumImpact();
                       Navigator.of(context).push(
                         CupertinoPageRoute(builder: (context) => const AboutScreen()),
                       );
@@ -201,6 +210,8 @@ class SettingsScreen extends StatelessWidget {
                     title: Text('settings_danger_zone_clear_data'.tr,
                       style: const TextStyle(color: CupertinoColors.destructiveRed)),
                     onTap: () {
+                      // 触感反馈
+                      HapticFeedback.mediumImpact();
                       showCupertinoDialog(
                         context: context, 
                         builder: (context) => CupertinoAlertDialog(
@@ -210,12 +221,18 @@ class SettingsScreen extends StatelessWidget {
                             CupertinoDialogAction(
                               isDefaultAction: true,
                               child: Text('common_cancel'.tr),
-                              onPressed: () => Navigator.pop(context),
+                              onPressed: (){
+                                // 触感反馈
+                                HapticFeedback.mediumImpact();
+                                Navigator.pop(context);
+                              },
                             ),
                             CupertinoDialogAction(
                               isDestructiveAction: true,
                               child: Text('settings_danger_zone_clear_data'.tr),
                               onPressed: () async {
+                                // 触感反馈
+                                HapticFeedback.mediumImpact();
                                 await Get.find<GameController>().clearAll();
                                 if (context.mounted) Navigator.pop(context);
                               },

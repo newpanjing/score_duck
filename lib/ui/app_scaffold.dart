@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
@@ -21,6 +22,8 @@ class _AppScaffoldState extends State<AppScaffold> {
     setState(() {
       currentPage = page;
     });
+    //触感反馈
+    HapticFeedback.lightImpact();
   }
 
   Widget _buildBody(BuildContext context) {

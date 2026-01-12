@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import '../controllers/game_controller.dart';
 import '../models/game.dart';
@@ -70,6 +71,8 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     );
 
     await _gameController.addGame(game);
+    // 触感反馈
+    HapticFeedback.mediumImpact();
     if (mounted) {
       Navigator.of(context).pop();
       Get.toNamed('/game/${game.id}');
@@ -118,11 +121,13 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
                         _PlayerCountSelector(
                           count: _playerCount,
                           isDark: isDark,
-                          onChanged: (value) {
+                          onChanged: (value) async{
                             setState(() {
                               _playerCount = value;
                               _updatePlayerCount(value.toInt());
                             });
+                            // 触感反馈
+                            HapticFeedback.mediumImpact();
                           },
                         ),
                       ],

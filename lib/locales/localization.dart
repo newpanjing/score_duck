@@ -14,11 +14,11 @@ class AppTranslations extends Translations {
     {'locale': null, 'name': '跟随系统'},
     {'locale': const Locale('en'), 'name': 'English'},
     {
-      'locale': Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hans'),
+      'locale': const Locale('zh', 'CN'),
       'name': '中文(简体)',
     },
     {
-      'locale': Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
+      'locale': const Locale('zh', 'TW'),
       'name': '中文(繁體)',
     },
     {'locale': const Locale('es'), 'name': 'Español'},
@@ -31,8 +31,8 @@ class AppTranslations extends Translations {
   @override
   Map<String, Map<String, String>> get keys => {
     'en_US': EnUsTranslations.keys,
-    'zh-Hans': ZhHansTranslations.keys,
-    'zh-Hant': ZhHantTranslations.keys,
+    'zh_CN': ZhHansTranslations.keys,
+    'zh_TW': ZhHantTranslations.keys,
     'es_ES': EsEsTranslations.keys,
     'fr': FrTranslations.keys,
     'de': DeTranslations.keys,

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -38,22 +40,19 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
+    final languageController = Get.find<LanguageController>();
 
     return Obx(() {
+      log("更新了:${languageController.currentLocale}");
+      
       final themeMode = themeController.currentTheme;
+      final currentLocale = languageController.currentLocale;
 
-      Brightness? brightness;
-      switch (themeMode) {
-        case ThemeMode.light:
-          brightness = Brightness.light;
-          break;
-        case ThemeMode.dark:
-          brightness = Brightness.dark;
-          break;
-        case ThemeMode.system:
-          brightness = null;
-          break;
-      }
+      Brightness? brightness = themeMode == ThemeMode.system
+          ? null
+          : themeMode == .light
+          ? Brightness.light
+          : Brightness.dark;
 
       return GetCupertinoApp(
         localizationsDelegates: const [
@@ -61,17 +60,16 @@ class _MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: AppTranslations().keys.keys.map((langCode) {
-          if (langCode.contains('-')) {
-            final parts = langCode.split('-');
-            return Locale.fromSubtags(
-              languageCode: parts[0],
-              scriptCode: parts[1],
-            );
+        supportedLocales: AppTranslations().keys.keys.map((key) {
+          if (key.contains('_')) {
+            final parts = key.split('_');
+            if (parts.length == 2) {
+              return Locale(parts[0], parts[1]);
+            }
           }
-          return Locale(langCode);
+          return Locale(key);
         }).toList(),
-        locale: Get.locale ?? Get.deviceLocale,
+        locale: currentLocale ?? Get.deviceLocale,
         fallbackLocale: const Locale('en_US'),
         theme: CupertinoThemeData(
           brightness: brightness,

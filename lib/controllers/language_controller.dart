@@ -17,19 +17,20 @@ class LanguageController extends GetxController {
 
   Locale? _stringToLocale(String? localeString) {
     if (localeString == null || localeString == 'system') return null;
-    if (localeString.contains('-')) {
-      final parts = localeString.split('-');
-      return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
+    if (localeString.contains('_')) {
+      final parts = localeString.split('_');
+      if (parts.length == 2) {
+        return Locale(parts[0], parts[1]);
+      } else if (parts.length == 3) {
+        return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1], countryCode: parts[2]);
+      }
     }
     return Locale(localeString);
   }
 
   String _localeToString(Locale? locale) {
     if (locale == null) return 'system';
-    if (locale.scriptCode != null) {
-      return '${locale.languageCode}-${locale.scriptCode}';
-    }
-    return locale.languageCode;
+    return locale.toString();
   }
 
   Future<void> _loadLanguage() async {
@@ -54,6 +55,5 @@ class LanguageController extends GetxController {
     } else {
       Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
     }
-    Get.locale = locale;
   }
 }

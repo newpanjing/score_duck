@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart' as intl;
 import '../controllers/game_controller.dart';
@@ -10,6 +11,8 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   void _showCreateGameSheet(BuildContext context) {
+    // 触感反馈
+    HapticFeedback.mediumImpact();
     showCupertinoModalPopup(
       context: context,
       builder: (context) => const CreateGameScreen(),
@@ -123,9 +126,15 @@ class _GameListItem extends StatelessWidget {
           ),
           onDismissed: (_) {
             gameController.deleteGame(game.id);
+            // 触感反馈
+            HapticFeedback.lightImpact();
           },
           child: GestureDetector(
-            onTap: () => Get.toNamed('/game/${game.id}'),
+            onTap: () {
+              Get.toNamed('/game/${game.id}');
+              // 触感反馈
+              HapticFeedback.lightImpact();
+            } ,
             child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
