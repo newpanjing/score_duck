@@ -38,10 +38,21 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCreateGameSheet(BuildContext context) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (context) => const CreateGameScreen(),
-    );
+    final isIPad = MediaQuery.of(context).size.shortestSide > 600;
+    
+    if (isIPad) {
+      Navigator.of(context).push(
+        CupertinoPageRoute(
+          builder: (context) => const CreateGameScreen(),
+        ),
+      );
+    } else {
+      showCupertinoModalPopup(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const CreateGameScreen(),
+      );
+    }
   }
 
   @override

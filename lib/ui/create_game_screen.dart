@@ -85,6 +85,73 @@ class _CreateGameScreenState extends State<CreateGameScreen> {
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
         (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isIPad = MediaQuery.of(context).size.shortestSide > 600;
+
+    if (isIPad) {
+      return CupertinoPageScaffold(
+        navigationBar: CupertinoNavigationBar(
+          middle: Text('create_game_title'.tr),
+          trailing: CupertinoButton(
+            onPressed: _saveGame,
+            padding: EdgeInsets.zero,
+            child: Text('create_game_start'.tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 8,
+              bottom: keyboardHeight > 0 ? keyboardHeight + 20 : 40,
+            ),
+            child: Column(
+              children: [
+                _FormSection(
+                  title: 'create_game_basic_info'.tr,
+                  children: [
+                    _StyledTextField(
+                      controller: _nameController,
+                      placeholder: 'create_game_game_name_placeholder'.tr,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 24),
+                    _PlayerCountSelector(
+                      count: _playerCount,
+                      isDark: isDark,
+                      onChanged: (value) async{
+                        setState(() {
+                          _playerCount = value;
+                          _updatePlayerCount(value.toInt());
+                        });
+                        // 触感反馈
+                        HapticFeedback.mediumImpact();
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                _FormSection(
+                  title: 'create_game_player_list'.tr,
+                  children: List.generate(_playerControllers.length, (index) {
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index < _playerControllers.length - 1 ? 16 : 0,
+                      ),
+                      child: _PlayerInputRow(
+                        index: index,
+                        controller: _playerControllers[index],
+                        isDark: isDark,
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

@@ -63,36 +63,39 @@ class AddRoundSheetState extends State<AddRoundSheet> {
   @override
   Widget build(BuildContext context) {
     final gameController = Get.find<GameController>();
-    final baseScores = gameController.baseScores;
-    final int baseScore = baseScores[widget.game.id] ?? 1;
     final systemBrightness = MediaQuery.of(context).platformBrightness;
     final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
         (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-      ),
-      child: Column(
-        children: [
-          _buildHeader(widget.initialRound != null),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(20),
-              children: [
-                _buildBaseScoreSection(baseScore, isDark),
-                const SizedBox(height: 24),
-                ...widget.game.players.map((p) => _buildPlayerInput(p, baseScore, isDark)),
-                const SizedBox(height: 40),
-              ],
+    return Obx(() {
+      final baseScores = gameController.baseScores;
+      final int baseScore = baseScores[widget.game.id] ?? 1;
+
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            _buildHeader(widget.initialRound != null),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  _buildBaseScoreSection(baseScore, isDark),
+                  const SizedBox(height: 24),
+                  ...widget.game.players.map((p) => _buildPlayerInput(p, baseScore, isDark)),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildHeader(bool isEditing) {
