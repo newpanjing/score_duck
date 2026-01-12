@@ -4,13 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:go_router/go_router.dart';
 import '../models/game.dart';
 import '../models/round.dart';
-import '../ui/app_scaffold.dart';
-import '../ui/game_detail_screen.dart';
-import '../ui/home_screen.dart';
-import '../ui/settings_screen.dart';
 
 class GameController extends GetxController {
   static const _fileName = 'games.json';
@@ -23,53 +18,11 @@ class GameController extends GetxController {
   final RxMap<String, int> _baseScores = <String, int>{}.obs;
   Map<String, int> get baseScores => Map<String, int>.from(_baseScores);
 
-  late final GoRouter routerConfig;
-
   @override
   void onInit() {
     super.onInit();
     _loadGames();
     _loadBaseScores();
-    _initRouter();
-  }
-
-  void _initRouter() {
-    routerConfig = GoRouter(
-      initialLocation: '/home',
-      routes: [
-        StatefulShellRoute.indexedStack(
-          builder: (context, state, navigationShell) {
-            return AppScaffold(navigationShell: navigationShell);
-          },
-          branches: [
-            StatefulShellBranch(
-              routes: [
-                GoRoute(
-                  path: '/home',
-                  builder: (context, state) => const HomeScreen(),
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              routes: 
-                [
-                  GoRoute(
-                    path: '/settings',
-                    builder: (context, state) => const SettingsScreen(),
-                  ),
-                ],
-            ),
-          ],
-        ),
-        GoRoute(
-          path: '/game/:id',
-          builder: (context, state) {
-            final id = state.pathParameters['id']!;
-            return GameDetailScreen(gameId: id);
-          },
-        ),
-      ],
-    );
   }
 
   Future<File> get _file async {

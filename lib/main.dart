@@ -5,7 +5,11 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'controllers/language_controller.dart';
 import 'controllers/theme_controller.dart';
 import 'controllers/game_controller.dart';
-import 'localization.dart';
+import 'locales/localization.dart';
+import 'ui/app_scaffold.dart';
+import 'ui/game_detail_screen.dart';
+import 'ui/home_screen.dart';
+import 'ui/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,18 +38,9 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeController>();
-    final languageController = Get.find<LanguageController>();
 
     return Obx(() {
       final themeMode = themeController.currentTheme;
-      final currentLocale = languageController.currentLocale;
-
-      // Set initial locale for GetX based on currentLocale (from shared_preferences)
-      if (currentLocale != null) {
-        Get.locale = currentLocale;
-      } else {
-        Get.locale = Get.deviceLocale ?? const Locale('en');
-      }
 
       Brightness? brightness;
       switch (themeMode) {
@@ -60,7 +55,7 @@ class _MyAppState extends State<MyApp> {
           break;
       }
 
-      return CupertinoApp.router(
+      return GetCupertinoApp(
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,
@@ -69,16 +64,32 @@ class _MyAppState extends State<MyApp> {
         supportedLocales: AppTranslations().keys.keys.map((langCode) {
           if (langCode.contains('-')) {
             final parts = langCode.split('-');
-            return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
+            return Locale.fromSubtags(
+              languageCode: parts[0],
+              scriptCode: parts[1],
+            );
           }
           return Locale(langCode);
         }).toList(),
-        locale: Get.locale,
+        locale: Get.locale ?? Get.deviceLocale,
+        fallbackLocale: const Locale('en_US'),
         theme: CupertinoThemeData(
           brightness: brightness,
           primaryColor: CupertinoColors.activeBlue,
         ),
-        routerConfig: Get.find<GameController>().routerConfig,
+        getPages: [
+          GetPage(name: '/', page: () => const AppScaffold()),
+          GetPage(name: '/home', page: () => const HomeScreen()),
+          GetPage(name: '/settings', page: () => const SettingsScreen()),
+          GetPage(
+            name: '/game/:id',
+            page: () {
+              final id = Get.parameters['id']!;
+              return GameDetailScreen(gameId: id);
+            },
+          ),
+        ],
+        initialRoute: '/',
         debugShowCheckedModeBanner: false,
       );
     });

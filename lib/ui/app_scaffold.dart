@@ -1,27 +1,53 @@
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:get/get.dart';
+import 'home_screen.dart';
+import 'settings_screen.dart';
 
-class AppScaffold extends StatelessWidget {
-  final StatefulNavigationShell navigationShell;
+enum AppRoute { home, settings }
 
-  const AppScaffold({
-    super.key,
-    required this.navigationShell,
-  });
+class AppScaffold extends StatefulWidget {
+  const AppScaffold({super.key});
+
+  @override
+  State<AppScaffold> createState() => _AppScaffoldState();
+}
+
+class _AppScaffoldState extends State<AppScaffold> {
+  AppRoute currentPage = .home;
+  
+  void setCurrentPage(AppRoute page) {
+    setState(() {
+      currentPage = page;
+    });
+  }
+
+  Widget _buildBody(BuildContext context) {
+    Widget child = HomeScreen();
+    switch (currentPage) {
+      case .home:
+        child = HomeScreen();
+        break;
+      case .settings:
+        child = SettingsScreen();
+        break;
+    }
+    return child;
+  }
 
   @override
   Widget build(BuildContext context) {
     final systemBrightness = MediaQuery.of(context).platformBrightness;
-    final isDark = CupertinoTheme.of(context).brightness == Brightness.dark ||
-        (CupertinoTheme.of(context).brightness == null && systemBrightness == Brightness.dark);
+    final isDark =
+        CupertinoTheme.of(context).brightness == Brightness.dark ||
+        (CupertinoTheme.of(context).brightness == null &&
+            systemBrightness == Brightness.dark);
 
     return Scaffold(
       body: Stack(
         children: [
-          navigationShell,
+          _buildBody(context),
           Positioned(
             left: 0,
             right: 0,
@@ -32,26 +58,34 @@ class AppScaffold extends StatelessWidget {
                 child: Container(
                   width: 250,
                   height: 72,
-                  margin: const EdgeInsets.only(bottom: 16, left: 20, right: 20),
+                  margin: const EdgeInsets.only(
+                    bottom: 16,
+                    left: 20,
+                    right: 20,
+                  ),
                   decoration: BoxDecoration(
-                    color: (isDark
-                            ? const Color(0xFF2C2C2E)
-                            : CupertinoColors.white)
-                        .withValues(alpha: 0.95),
+                    color:
+                        (isDark
+                                ? const Color(0xFF2C2C2E)
+                                : CupertinoColors.white)
+                            .withValues(alpha: 0.95),
                     borderRadius: BorderRadius.circular(36),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.5 : 0.15),
+                        color: Colors.black.withValues(
+                          alpha: isDark ? 0.5 : 0.15,
+                        ),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                         spreadRadius: -5,
                       ),
                     ],
                     border: Border.all(
-                      color: (isDark
-                              ? CupertinoColors.white
-                              : CupertinoColors.systemGrey)
-                          .withValues(alpha: 0.15),
+                      color:
+                          (isDark
+                                  ? CupertinoColors.white
+                                  : CupertinoColors.systemGrey)
+                              .withValues(alpha: 0.15),
                       width: 0.5,
                     ),
                   ),
@@ -66,16 +100,16 @@ class AppScaffold extends StatelessWidget {
                             child: _BottomBarItem(
                               icon: CupertinoIcons.home,
                               label: 'home_tab_title'.tr,
-                              isSelected: navigationShell.currentIndex == 0,
-                              onTap: () => _onTap(context, 0),
+                              isSelected: currentPage==.home,
+                              onTap: () => setCurrentPage(.home),
                             ),
                           ),
                           Expanded(
                             child: _BottomBarItem(
                               icon: CupertinoIcons.settings,
                               label: 'settings_tab_title'.tr,
-                              isSelected: navigationShell.currentIndex == 1,
-                              onTap: () => _onTap(context, 1),
+                              isSelected: currentPage==.settings,
+                              onTap: () => setCurrentPage(.settings),
                             ),
                           ),
                         ],
@@ -88,11 +122,6 @@ class AppScaffold extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }  void _onTap(BuildContext context, int index) {
-    navigationShell.goBranch(
-      index,
-      initialLocation: index == navigationShell.currentIndex,
     );
   }
 }
@@ -112,7 +141,9 @@ class _BottomBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? CupertinoColors.activeBlue : CupertinoColors.systemGrey;
+    final color = isSelected
+        ? CupertinoColors.activeBlue
+        : CupertinoColors.systemGrey;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,

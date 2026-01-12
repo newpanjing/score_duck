@@ -17,8 +17,8 @@ class LanguageController extends GetxController {
 
   Locale? _stringToLocale(String? localeString) {
     if (localeString == null || localeString == 'system') return null;
-    if (localeString.contains('_')) {
-      final parts = localeString.split('_');
+    if (localeString.contains('-')) {
+      final parts = localeString.split('-');
       return Locale.fromSubtags(languageCode: parts[0], scriptCode: parts[1]);
     }
     return Locale(localeString);
@@ -27,7 +27,7 @@ class LanguageController extends GetxController {
   String _localeToString(Locale? locale) {
     if (locale == null) return 'system';
     if (locale.scriptCode != null) {
-      return '${locale.languageCode}_${locale.scriptCode}';
+      return '${locale.languageCode}-${locale.scriptCode}';
     }
     return locale.languageCode;
   }
@@ -38,24 +38,22 @@ class LanguageController extends GetxController {
       final lang = prefs.getString(_key);
       final locale = _stringToLocale(lang);
       _currentLocale.value = locale;
-      _updateGetXLocale(locale);
     } catch (e) {
-      _updateGetXLocale(null);
+      _currentLocale.value = null;
     }
   }
 
   Future<void> setLanguage(Locale? locale) async {
     _currentLocale.value = locale;
-    _updateGetXLocale(locale);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_key, _localeToString(locale));
-  }
-
-  void _updateGetXLocale(Locale? locale) {
+    
+    // Update GetX locale for translations
     if (locale != null) {
       Get.updateLocale(locale);
     } else {
       Get.updateLocale(Get.deviceLocale ?? const Locale('en'));
     }
+    Get.locale = locale;
   }
 }
