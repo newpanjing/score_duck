@@ -32,6 +32,7 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+.xcode_cloud_build_number
 
 # Symbolication related
 app.*.symbols

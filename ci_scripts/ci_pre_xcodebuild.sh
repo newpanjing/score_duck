@@ -3,4 +3,6 @@
 set -eu
 
 SCRIPT_DIRECTORY=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-exec "$SCRIPT_DIRECTORY/../../ci_scripts/ci_post_clone.sh"
+. "$SCRIPT_DIRECTORY/common.sh"
+
+configure_ios
