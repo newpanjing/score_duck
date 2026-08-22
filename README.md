@@ -2,6 +2,20 @@
 
 A new Flutter project.
 
+## Xcode Cloud
+
+仓库已包含 Xcode Cloud 生命周期脚本（`ios/ci_scripts/`）。创建 Xcode Cloud 工作流时，请选择：
+
+- 触发条件：Branch Changes，分支仅选择 `ios`
+- 项目：`ios/Runner.xcworkspace`
+- Scheme：`Runner`
+- 构建操作：Archive（Release）
+- 完成后操作：选择 `TestFlight` 或 `App Store` 分发到 App Store Connect
+
+工作流会在 `ios` 分支克隆后安装 Flutter `3.47.0`、执行 `flutter pub get` 和 `pod install`，并在 Xcode 构建前使用 Xcode Cloud 的 `CI_BUILD_NUMBER` 生成 iOS 配置。请在 App Store Connect 中为 Bundle ID `com.noondot.ScoreDuck` 配置签名证书和描述文件，并在工作流的环境设置中启用自动签名。Xcode Cloud 会使用 Archive 产物自动上传到 App Store Connect；不需要在仓库中保存 API Key。
+
+本地仓库仍保持在 `main` 分支。需要发布 iOS 时，将代码合并或推送到远程 `ios` 分支即可触发工作流。
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

@@ -23,7 +23,10 @@ class GameDetailScreen extends StatefulWidget {
 }
 
 class _GameDetailScreenState extends State<GameDetailScreen> {
+  static const _shareFileName = 'score_share.png';
   final GlobalKey _boundaryKey = GlobalKey();
+  final GlobalKey _shareButtonKey = GlobalKey();
+  bool _isChangingOrientation = false;
 
   @override
   void dispose() {
@@ -31,37 +34,52 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     super.dispose();
   }
 
-  void _toggleOrientation() {
-    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
-    if (isPortrait) {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-      ]);
+  Future<void> _toggleOrientation() async {
+    if (_isChangingOrientation) return;
+
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+    setState(() => _isChangingOrientation = true);
+    try {
+      await SystemChrome.setPreferredOrientations(
+        isPortrait
+            ? const [
+                DeviceOrientation.landscapeLeft,
+                DeviceOrientation.landscapeRight,
+              ]
+            : const [DeviceOrientation.portraitUp],
+      );
+    } finally {
+      if (mounted) setState(() => _isChangingOrientation = false);
     }
   }
 
   Future<void> _shareScore() async {
+    HapticFeedback.mediumImpact();
     try {
-      final RenderRepaintBoundary boundary =
-          _boundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final boundaryContext = _boundaryKey.currentContext;
+      if (boundaryContext == null) return;
+      final boundary = boundaryContext.findRenderObject();
+      if (boundary is! RenderRepaintBoundary) return;
       final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final pngBytes = byteData!.buffer.asUint8List();
+      if (byteData == null) return;
+      final pngBytes = byteData.buffer.asUint8List();
 
       final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/score_share.png').create();
+      final file = await File('${tempDir.path}/$_shareFileName').create();
       await file.writeAsBytes(pngBytes);
-      // 触感反馈
-      HapticFeedback.mediumImpact();
+      final shareButtonContext = _shareButtonKey.currentContext;
+      final shareButtonRenderObject = shareButtonContext?.findRenderObject();
+      final sharePositionOrigin = shareButtonRenderObject is RenderBox
+          ? shareButtonRenderObject.localToGlobal(Offset.zero) &
+                shareButtonRenderObject.size
+          : null;
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: 'game_detail_share_text'.tr,
+          sharePositionOrigin: sharePositionOrigin,
         ),
       );
     } catch (e) {
@@ -87,9 +105,9 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
     return Obx(() {
       final games = gameController.games;
       final game = games.cast<Game?>().firstWhere(
-            (g) => g?.id == widget.gameId,
-            orElse: () => null,
-          );
+        (g) => g?.id == widget.gameId,
+        orElse: () => null,
+      );
 
       if (game == null) {
         return CupertinoPageScaffold(
@@ -97,61 +115,72 @@ class _GameDetailScreenState extends State<GameDetailScreen> {
         );
       }
 
-      final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+      final isLandscape =
+          MediaQuery.of(context).orientation == Orientation.landscape;
 
       return CupertinoPageScaffold(
-          backgroundColor: isDark ? const Color(0xFF000000) : const Color(0xFFF2F2F7),
-          navigationBar: CupertinoNavigationBar(
-            backgroundColor: isDark
-                ? const Color(0xFF000000).withValues(alpha: 0.8)
-                : const Color(0xFFF2F2F7).withValues(alpha: 0.8),
-            border: null,
-            middle: Text(game.name, style: const TextStyle(fontWeight: FontWeight.w700)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: _shareScore,
-                  child: const Icon(CupertinoIcons.share, size: 20),
-                ),
-                CupertinoButton(
-                  padding: EdgeInsets.zero,
-                  onPressed: _toggleOrientation,
-                  child: Icon(
-                    isLandscape
-                        ? CupertinoIcons.device_phone_portrait
-                        : CupertinoIcons.device_phone_landscape,
-                    size: 20,
-                  ),
-                ),
-              ],
-            ),
+        backgroundColor: isDark
+            ? const Color(0xFF000000)
+            : const Color(0xFFF2F2F7),
+        navigationBar: CupertinoNavigationBar(
+          backgroundColor: isDark
+              ? const Color(0xFF000000).withValues(alpha: 0.8)
+              : const Color(0xFFF2F2F7).withValues(alpha: 0.8),
+          border: null,
+          middle: Text(
+            game.name,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-          child: SafeArea(
-            bottom: false,
-            child: Stack(
-              children: [
-                if (isLandscape)
-                  LandscapeLayout(
-                    game: game,
-                    onEditRound: (Round round) => _showAddRoundSheet(context, game, round: round),
-                  )
-                else
-                  PortraitLayout(
-                    game: game,
-                    onEditRound: (Round round) => _showAddRoundSheet(context, game, round: round),
-                    repaintKey: _boundaryKey,
-                  ),
-                ScoreFloatingActionButton(
-                  onPressed: () => _showAddRoundSheet(context, game),
-                  isLandscape: isLandscape,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoButton(
+                key: _shareButtonKey,
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(44, 44),
+                onPressed: _shareScore,
+                child: const Icon(CupertinoIcons.share, size: 20),
+              ),
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                minimumSize: const Size(44, 44),
+                onPressed: _isChangingOrientation ? null : _toggleOrientation,
+                child: Icon(
+                  isLandscape
+                      ? CupertinoIcons.device_phone_portrait
+                      : CupertinoIcons.device_phone_landscape,
+                  size: 20,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Stack(
+            children: [
+              RepaintBoundary(
+                key: _boundaryKey,
+                child: isLandscape
+                    ? LandscapeLayout(
+                        game: game,
+                        onEditRound: (Round round) =>
+                            _showAddRoundSheet(context, game, round: round),
+                      )
+                    : PortraitLayout(
+                        game: game,
+                        onEditRound: (Round round) =>
+                            _showAddRoundSheet(context, game, round: round),
+                      ),
+              ),
+              ScoreFloatingActionButton(
+                onPressed: () => _showAddRoundSheet(context, game),
+                isLandscape: isLandscape,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
   }
 }
